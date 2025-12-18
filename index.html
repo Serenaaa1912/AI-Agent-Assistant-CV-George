@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>George - Assistant de Serena</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+        .msg { max-width: 75%; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
+        .bot { background: #e4e6eb; align-self: flex-start; }
+        .user { background: #0084ff; color: white; align-self: flex-end; }
+        #input-area { display: flex; padding: 20px; background: white; border-top: 1px solid #ddd; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        button { margin-left: 10px; padding: 10px 20px; background: #0084ff; color: white; border: none; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <div class="msg bot">Bonjour, je m'appelle George et je suis l'assistant de Serena. Que voudriez-vous savoir à son sujet ?</div>
+    </div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Posez une question à George...">
+        <button onclick="sendMessage()">Envoyer</button>
+    </div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // Ton prompt de Google AI Studio est intégré ici
+        const SYSTEM_PROMPT = `Role : Assistant virtuel professionnel chargé de présenter le profil de Serena DELLAZZERI, future diplômée en Ingénierie d'Affaires.
+        Voice/Personality : Voix masculine au ton professionnel, structuré et aidant. S'exprime exclusivement à la troisième personne.
+        Name of agent : George.
+        Script at start: "Bonjour, je m'appelle George et je suis l'assistant de Serena. Que voudriez-vous savoir à son sujet ?"`;
+
+        window.sendMessage = async () => {
+            const input = document.getElementById('user-input');
+            const chatDiv = document.getElementById('chat');
+            if (!input.value) return;
+
+            const userText = input.value;
+            chatDiv.innerHTML += `<div class="msg user">${userText}</div>`;
+            input.value = '';
+
+            try {
+                // On utilisera la clé API configurée dans Vercel
+                const genAI = new GoogleGenerativeAI("VOTRE_CLE_API"); 
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: SYSTEM_PROMPT });
+                const result = await model.generateContent(userText);
+                chatDiv.innerHTML += `<div class="msg bot">${result.response.text()}</div>`;
+            } catch (e) {
+                chatDiv.innerHTML += `<div class="msg bot">George a besoin de sa clé API pour répondre.</div>`;
+            }
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        };
+    </script>
+</body>
+</html>
